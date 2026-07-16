@@ -7,7 +7,7 @@ A single-page birthday tribute website for Dharamraj Sir (HOD, Frontend Academic
 - **Dracula-themed UI** — Dark IDE-inspired design with CSS custom properties
 - **Code Editor** — Tabbed tribute viewer (bio/contributions/tribute) with syntax-highlighted panels
 - **Interactive Console** — Terminal-style wish dispatcher with animated typing output
-- **Wish Board** — SQL-themed form to post birthday wishes with localStorage persistence
+- **Wish Board** — SQL-themed form posting birthday wishes to Google Forms + Sheets (no backend), seeded with 3 static wishes
 - **Canvas Particles** — 60 FPS particle system with ResizeObserver & lifecycle management
 - **Audio Chime** — Dual-tone sine wave (`C5→E5`) via Web Audio API, muted by default
 - **Service Worker** — Inline Blob-based SW caching `/` and Tailwind CDN
@@ -28,7 +28,7 @@ A single-page birthday tribute website for Dharamraj Sir (HOD, Frontend Academic
 │       ├── particles.js # Canvas particle system
 │       ├── audio.js     # Web Audio API chime
 │       ├── terminal.js  # Terminal dispatcher with typing animation
-│       ├── wishes.js    # Wish board form + DOM injection + localStorage
+│       ├── wishes.js    # Wish board — Google Forms POST, opensheet JSON fetch, seed wishes
 │       ├── copy.js      # Loads externalised strings from JSON script block
 │       └── analytics.js # Analytics + web-vitals reporting
 └── .gitignore
