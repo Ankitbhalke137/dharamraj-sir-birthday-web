@@ -1,30 +1,44 @@
 /*
 ====================================================================
 Module: wishes.js
-Purpose: Dynamic wish board with SQL-themed form, safe DOM injection,
-         and localStorage persistence.
-  - Validates input fields (name ≥ 2 chars, message ≥ 5 chars).
-  - Creates wish cards using document.createElement (XSS-safe).
-  - Persists all wishes to localStorage under a known key.
-  - Hydrates the board from localStorage on load; falls back to
-    seed wishes when storage is empty.
+Purpose: Persistent wish board backed by Google Forms + Google Sheets.
+  - Displays wishes fetched via opensheet JSON proxy.
+  - Polls every 30 s and on tab visibility change.
+  - Submits new wishes via no-cors POST to Google Forms.
+  - Validates input fields (name >= 2 chars, message >= 5 chars).
   - Announces new cards to screen readers via aria-live region.
 ====================================================================
 */
 
-/* ---------- Constants ---------- */
-const STORAGE_KEY = 'tribute_wishes_data';
-const seedWishes = [
-  { name: 'From IOI Pune', message: 'The best mentor a student could ask for. Grateful!' },
-  { name: 'Kshitij Das', message: 'Your passion for fullstack is contagious. Happy Birthday!' },
-  { name: 'Ankit Bhalke', message: 'Happy Birthday, Sir! Thank you for bridging the gap between theory and practice, and for inspiring us to build better web architectures every day. Have a wonderful year ahead' },
-];
+/* ==============================
+   Google Forms Configuration
+   ============================== */
+
+const GFORM_CONFIG = {
+  formId: '1FAIpQLSeGSmEmSHRIR-jF0q5B8LdMPC63X5U3tkw8y75FY0SoqiQyKA',
+  entryName: 'entry.825922743',
+  entryWish: 'entry.238972684',
+  sheetJsonUrl: 'https://opensheet.elk.sh/1IGqrnCXz5gAEhuAmxWPLyu0x2Y_bARlacxBkOj_3oS8/1',
+  pollIntervalMs: 30000,
+};
+
+/* ==============================
+   Sanitisation (XSS-safe)
+   ============================== */
+
+/**
+ * Escape HTML special characters for safe innerHTML usage.
+ * @param {string} str
+ * @returns {string}
+ */
+const escapeHtml = (str) => {
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  return String(str).replace(/[&<>"']/g, (c) => map[c]);
+};
 
 /**
  * Sanitise a string for safe textContent usage.
- * Defense-in-depth — even though we use createElement/textContent
- * (which are inherently XSS-safe), this normalises whitespace
- * and strips control characters.
+ * Normalises whitespace and strips control characters.
  * @param {string} str
  * @returns {string}
  */
@@ -36,52 +50,43 @@ const sanitise = (str) => {
 };
 
 /* ==============================
-   localStorage helpers
+   Static seed wishes (always shown first)
    ============================== */
 
-/**
- * Load the wishes array from localStorage.
- * Returns null if the key is missing or JSON is corrupt.
- * @returns {Array|null}
- */
-const loadWishes = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-};
-
-/**
- * Persist the wishes array to localStorage.
- * @param {Array} wishes  Array of {name, message, timestamp}
- */
-const saveWishes = (wishes) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(wishes));
-  } catch {
-    // localStorage full or unavailable — degrade silently
-  }
-};
+const seedWishes = [
+  { Name: 'From IOI Pune', 'Your Wish': 'The best mentor a student could ask for. Grateful!', Timestamp: new Date().toISOString() },
+  { Name: 'Kshitij Das', 'Your Wish': 'Your passion for fullstack is contagious. Happy Birthday!', Timestamp: new Date().toISOString() },
+  { Name: 'Ankit Bhalke', 'Your Wish': 'Happy Birthday, Sir! Thank you for bridging the gap between theory and practice, and for inspiring us to build better web architectures every day. Have a wonderful year ahead', Timestamp: new Date().toISOString() },
+];
 
 /* ==============================
-   Card rendering
+   Fetch & Render
    ============================== */
 
 /**
- * Creates a wish card <article> element using safe DOM methods.
- * Never uses innerHTML with user-supplied data.
- * @param {string}  name
- * @param {string}  message
- * @param {string}  [isoTimestamp]  ISO string for restored wishes
+ * Fetch wishes from the opensheet JSON proxy.
+ * Returns an array of row objects.
+ */
+const loadWishes = async () => {
+  try {
+    const res = await fetch(GFORM_CONFIG.sheetJsonUrl, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Wish load failed:', err);
+    return [];
+  }
+};
+
+/**
+ * Create a single wish card <article> element.
+ * Uses createElement and textContent for XSS safety.
+ * @param {Object} row  {Name, 'Your Wish', Timestamp}
  * @returns {HTMLElement}
  */
-const createWishCard = (name, message, isoTimestamp) => {
-  const safeName = sanitise(name);
-  const safeMessage = sanitise(message);
+const createWishCard = (row) => {
+  const safeName = sanitise(row.Name || 'Anonymous');
+  const safeMessage = sanitise(row['Your Wish'] || '');
 
   const card = document.createElement('article');
   card.className = 'wish-card interactive';
@@ -107,7 +112,7 @@ const createWishCard = (name, message, isoTimestamp) => {
 
   const timeEl = document.createElement('time');
   timeEl.className = 'font-mono text-[10px] text-[#6272a4]';
-  const date = isoTimestamp ? new Date(isoTimestamp) : new Date();
+  const date = row.Timestamp ? new Date(row.Timestamp) : new Date();
   timeEl.textContent = date.toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
@@ -126,17 +131,20 @@ const createWishCard = (name, message, isoTimestamp) => {
 };
 
 /**
- * Render an array of wish objects into the board container.
- * Replaces all existing children (used on initialisation).
+ * Render seed wishes then sheet wishes into the board.
+ * Seeds are always shown first; sheet wishes appended after (newest first).
  * @param {HTMLElement} board
- * @param {Array}       wishes  Array of {name, message, timestamp}
  */
-const renderAllWishes = (board, wishes) => {
-  board.textContent = ''; // safe — no user data in board itself
-  // Render in reverse so newest appears first (prepended order)
-  for (let i = wishes.length - 1; i >= 0; i--) {
-    const { name, message, timestamp } = wishes[i];
-    board.appendChild(createWishCard(name, message, timestamp));
+const renderWishes = async (board) => {
+  board.textContent = '';
+
+  // 1. Static seed wishes
+  seedWishes.forEach((w) => board.appendChild(createWishCard(w)));
+
+  // 2. Sheet wishes (newest first)
+  const data = await loadWishes();
+  for (let i = data.length - 1; i >= 0; i--) {
+    board.appendChild(createWishCard(data[i]));
   }
 };
 
@@ -165,8 +173,8 @@ const validateField = (value, minLen, fieldName) => {
    ============================== */
 
 /**
- * Initialises the wish board: hydrates from localStorage or seeds,
- * wires form validation, and handles submission + persistence.
+ * Initialises the wish board: fetches from Google Sheets,
+ * wires form validation, and submits to Google Forms.
  */
 export function initWishBoard() {
   const form = document.getElementById('wishForm');
@@ -178,19 +186,16 @@ export function initWishBoard() {
 
   if (!form || !board) return;
 
-  /* ---------- Hydrate from localStorage / seed ---------- */
-  const stored = loadWishes();
-  const wishes = stored !== null ? stored : seedWishes.map((w) => ({
-    ...w,
-    timestamp: new Date().toISOString(),
-  }));
+  /* ---------- Initial load ---------- */
+  renderWishes(board);
 
-  // Persist seed wishes on first visit so they appear next time
-  if (stored === null) {
-    saveWishes(wishes);
-  }
+  /* ---------- Poll every 30 s ---------- */
+  const pollTimer = setInterval(() => renderWishes(board), GFORM_CONFIG.pollIntervalMs);
 
-  renderAllWishes(board, wishes);
+  /* ---------- Refresh on tab focus ---------- */
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) renderWishes(board);
+  });
 
   /* ---------- Validation helpers ---------- */
   const validateName = () => {
@@ -221,8 +226,8 @@ export function initWishBoard() {
     msgInput.classList.remove('error');
   });
 
-  /* ---------- Form submission ---------- */
-  form.addEventListener('submit', (e) => {
+  /* ---------- Form submission — POST to Google Forms ---------- */
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const nameValid = validateName();
@@ -231,30 +236,44 @@ export function initWishBoard() {
 
     const name = sanitise(nameInput.value);
     const message = sanitise(msgInput.value);
-    const timestamp = new Date().toISOString();
 
-    // Prepend to in-memory array and persist
-    wishes.unshift({ name, message, timestamp });
-    saveWishes(wishes);
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
 
-    // Render the new card at the top of the board
-    board.prepend(createWishCard(name, message, timestamp));
+    try {
+      const formData = new FormData();
+      formData.append(GFORM_CONFIG.entryName, name);
+      formData.append(GFORM_CONFIG.entryWish, message);
 
-    // Reset form
-    nameInput.value = '';
-    msgInput.value = '';
-    nameInput.classList.remove('error');
-    msgInput.classList.remove('error');
-    nameError.textContent = '';
-    msgError.textContent = '';
+      await fetch(
+        `https://docs.google.com/forms/d/e/${GFORM_CONFIG.formId}/formResponse`,
+        { method: 'POST', mode: 'no-cors', body: formData }
+      );
 
-    // Screen-reader announcement
-    const announcement = document.createElement('div');
-    announcement.setAttribute('aria-live', 'polite');
-    announcement.className = 'sr-only';
-    announcement.textContent = `Wish from ${name} added to the board.`;
-    document.body.appendChild(announcement);
-    setTimeout(() => announcement.remove(), 3000);
+      form.reset();
+      nameInput.classList.remove('error');
+      msgInput.classList.remove('error');
+      nameError.textContent = '';
+      msgError.textContent = '';
+
+      // Screen-reader announcement
+      const announcement = document.createElement('div');
+      announcement.setAttribute('aria-live', 'polite');
+      announcement.className = 'sr-only';
+      announcement.textContent = `Wish from ${name} submitted. Refreshing board.`;
+      document.body.appendChild(announcement);
+      setTimeout(() => announcement.remove(), 3000);
+
+      // Optimistic board refresh after Google's processing delay
+      setTimeout(() => renderWishes(board), 1500);
+    } catch (err) {
+      console.error(err);
+      nameError.textContent = 'Submission failed. Please try again.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '$ EXECUTE';
+    }
   });
 
   /* ---------- Enter key submits ---------- */
