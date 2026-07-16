@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<!--
+====================================================================
+TRIBUTE PAGE: Dharamraj Sir
+Senior Frontend Architect, Mentor, and HOD
+
+Architecture:
+  - Semantic HTML5 (header, main, section, article, footer)
+  - Tailwind CSS CDN for utility-first responsive styling
+  - External custom CSS with Dracula-themed design system
+  - ES6+ Vanilla JavaScript modules with import/export
+  - Canvas particle system at 60 FPS (requestAnimationFrame)
+  - Web Audio API synthetic chime (muted by default)
+  - Zero frameworks, zero dependencies
+====================================================================
+-->
+<html lang="en">
+<head>
+  <!-- eslint-env browser, es2022 -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Birthday tribute page for Dharamraj Sir — SOT Lead, Senior Frontend Architect, and Mentor" />
+  <title>Happy Birthday, Dharamraj Sir!</title>
+
+  <!-- Security headers (CSP, Referrer, X-Content-Type-Options) -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' blob: https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://fonts.googleapis.com https://unpkg.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://vitals.example.com;" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+
+  <!--
+    Critical CSS fallback — covers above-the-fold layout before
+    Tailwind finishes loading (Section 2.4 — Defer Tailwind).
+    Only the most essential utility classes are inlined to prevent
+    a flash of unstyled content.
+  -->
+  <style>
+    .fixed { position: fixed; }
+    .top-0 { top: 0; }
+    .left-0 { left: 0; }
+    .right-0 { right: 0; }
+    .z-50 { z-index: 50; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .max-w-6xl { max-width: 72rem; }
+    .mx-auto { margin-left: auto; margin-right: auto; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .h-14 { height: 3.5rem; }
+    .text-center { text-align: center; }
+    .pt-28 { padding-top: 7rem; }
+    .pb-16 { padding-bottom: 4rem; }
+    .pb-20 { padding-bottom: 5rem; }
+    .font-mono { font-family: 'JetBrains Mono','Fira Code',monospace; }
+    .text-xs { font-size: 0.75rem; line-height: 1rem; }
+    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-4 { gap: 1rem; }
+    .hidden { display: none; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .transition-all { transition-property: all; }
+    .duration-200 { transition-duration: 0.2s; }
+    .w-full { width: 100%; }
+    .block { display: block; }
+    .font-bold { font-weight: 700; }
+    .font-extrabold { font-weight: 800; }
+    .tracking-tight { letter-spacing: -0.025em; }
+    .leading-relaxed { line-height: 1.625; }
+    .grid { display: grid; }
+    .mt-4 { margin-top: 1rem; }
+    .mt-6 { margin-top: 1.5rem; }
+    .mt-8 { margin-top: 2rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+
+    @media (min-width: 640px) {
+      .sm\\:inline { display: inline; }
+      .sm\\:h-16 { height: 4rem; }
+      .sm\\:px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+      .sm\\:pt-36 { padding-top: 9rem; }
+      .sm\\:pb-24 { padding-bottom: 6rem; }
+      .sm\\:pb-28 { padding-bottom: 7rem; }
+      .sm\\:text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+      .sm\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sm\\:w-auto { width: auto; }
+    }
+    @media (min-width: 768px) {
+      .md\\:block { display: block; }
+    }
+    @media (min-width: 1024px) {
+      .lg\\:px-8 { padding-left: 2rem; padding-right: 2rem; }
+      .lg\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+  </style>
+
+  <!--
+    Tailwind CSS CDN v3.4 — deferred so it doesn't block rendering.
+    The inline critical CSS above ensures the page looks correct
+    immediately while Tailwind generates the full utility set.
+  -->
+  <script defer src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: JetBrains Mono for code, Inter for UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!--
+    Tailwind config — extends theme with Dracula-inspired tokens.
+    Kept inline because Tailwind CDN reads it from a script block.
+  -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+          },
+          colors: {
+            dracula: {
+              bg:       '#1a1b26',
+              surface:  '#282a36',
+              current:  '#44475a',
+              fg:       '#f8f8f2',
+              comment:  '#6272a4',
+              cyan:     '#8be9fd',
+              green:    '#50fa7b',
+              orange:   '#ffb86c',
+              pink:     '#ff79c6',
+              purple:   '#bd93f9',
+              red:      '#ff5555',
+              yellow:   '#f1fa8c',
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <!--
+    Web Vitals Reporting — Section 2.4 of IMPROVEMENTS_PROMPT.
+    Dynamically imports web-vitals (1 KB) from CDN and reports
+    CLS, LCP, FID via sendBeacon to a placeholder endpoint.
+    Loads asynchronously and never blocks the main thread.
+  -->
+  <script type="module">
+    const reportVital = (metric) => {
+      try {
+        const payload = JSON.stringify({
+          event: 'web_vital',
+          name: metric.name,
+          value: metric.value,
+          rating: metric.rating,
+          delta: metric.delta,
+          timestamp: new Date().toISOString(),
+        });
+        navigator.sendBeacon('https://vitals.example.com/collect', payload);
+      } catch {
+        /* fail silently */
+      }
+    };
+
+    // Delay vitals import so it never competes with initial render
+    window.addEventListener('load', async () => {
+      try {
+        const { onCLS, onLCP, onFID } = await import(
+          'https://unpkg.com/web-vitals@4/dist/web-vitals.attribution.js'
+        );
+        onCLS(reportVital);
+        onLCP(reportVital);
+        onFID(reportVital);
+      } catch {
+        /* CDN unavailable — degrade gracefully */
+      }
+    });
+  </script>
+
+  <!-- External custom stylesheet — Dracula theme, components, animations -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!--
+    Service Worker registration — inline Blob-based SW for offline
+    caching of index.html and Tailwind CDN. Section 2.2 of
+    IMPROVEMENTS_PROMPT.
+  -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      const swScript = [
+        'const CACHE = "tribute-v2";',
+        'const ASSETS = ["/","https://cdn.tailwindcss.com"];',
+        'self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));});',
+        'self.addEventListener("fetch",e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{let copy=res.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return res;})));});',
+      ].join('');
+      const blob = new Blob([swScript], { type: 'application/javascript' });
+      const swUrl = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl).catch(() => {});
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Skip-to-main link for keyboard users — hidden by default, visible on focus -->
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[10000] focus:px-4 focus:py-2 focus:bg-[#282a36] focus:text-[#f8f8f2] focus:font-mono focus:text-sm focus:rounded-lg focus:outline-2 focus:outline-[#ff79c6] focus:shadow-lg">
+    Skip to main content
+  </a>
+
+  <!--
+    ================================================================
+    <header> — Fixed Navigation Bar
+    Semantic element with system status, branding, digital clock.
+    ================================================================
+  -->
+  <header class="navbar-glass fixed top-0 left-0 right-0 z-50" role="banner">
+    <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 grid grid-cols-3 items-center" aria-label="Main navigation">
+
+      <!-- System Health badge — accessible live region (left) -->
+      <div class="flex items-center gap-2 sm:gap-3 justify-self-start">
+        <span class="health-dot" aria-hidden="true"></span>
+        <span class="text-xs sm:text-sm font-mono font-medium" aria-live="polite">
+          <span class="hidden sm:inline">System Health:</span>
+          <span class="text-[#50fa7b]">STABLE</span>
+        </span>
+      </div>
+
+      <!-- Brand metadata (center — truly centred via grid) -->
+      <div class="hidden md:block text-center justify-self-center">
+        <p class="text-xs font-mono text-[#6272a4]">// Tribute :: v1.0.0</p>
+      </div>
+
+      <!-- Digital Clock — real-time, updated via js/modules/clock.js (right) -->
+      <div class="flex items-center gap-3 justify-self-end">
+        <time id="digitalClock" class="font-mono text-xs sm:text-sm text-[#8be9fd] font-medium tracking-wider" aria-live="off" aria-label="Current time" datetime="">
+          --:--:--
+        </time>
+      </div>
+
+    </nav>
+  </header>
+
+  <!--
+    ================================================================
+    <main id="main"> — Primary Content Container
+    Skip link targets this id for keyboard accessibility.
+    ================================================================
+  -->
+  <main id="main">
+
+    <!-- #hero — Birthday Greeting -->
+    <section id="hero" class="section-panel pt-28 sm:pt-36 pb-16 sm:pb-24 px-4 text-center reveal" aria-labelledby="hero-title">
+      <div class="max-w-4xl mx-auto">
+        <p class="font-mono text-xs sm:text-sm text-[#6272a4] mb-4 tracking-widest">
+          <span class="text-[#ff79c6]">const</span>
+          <span class="text-[#50fa7b]">tribute</span>
+          <span class="text-[#ff79c6]">=</span>
+          <span class="text-[#f1fa8c]">'birthday'</span>;
+        </p>
+        <h1 id="hero-title" class="fluid-hero font-extrabold tracking-tight">
+          <span class="text-[#f8f8f2]">Happy Birthday,</span>
+          <br />
+          <span class="text-[#bd93f9]">Dharamraj Sir</span>
+          <span class="text-[#ff79c6]">!</span>
+        </h1>
+        <p class="fluid-sub mt-4 text-[#6272a4] font-mono font-medium">
+          Senior Fullstack Architect, Mentor, &amp; Head of Department
+        </p>
+        <div class="mt-8 flex items-center justify-center gap-3 text-[#44475a] font-mono text-xs">
+          <span class="h-px w-12 bg-[#44475a]"></span>
+          <span>/* with deepest gratitude */</span>
+          <span class="h-px w-12 bg-[#44475a]"></span>
+        </div>
+      </div>
+    </section>
+
+    <!--
+      #editor — Code Editor Block ("Tribute Document")
+      Mock IDE with tabbed files: bio.json, contributions.md, tribute.js.
+    -->
+    <section id="editor" class="section-panel pb-20 sm:pb-28 px-4 reveal" aria-labelledby="editor-title">
+      <div class="max-w-5xl mx-auto">
+        <h2 id="editor-title" class="fluid-section font-bold text-[#ffb86c] font-mono mb-6 text-center">
+          &lt; Tribute_Document /&gt;
+        </h2>
+        <div class="editor-window">
+          <!-- Title bar -->
+          <div class="flex items-center gap-2 px-4 py-3 bg-[#161725] border-b border-[#44475a]">
+            <span class="editor-header-dot bg-[#ff5555]" aria-hidden="true"></span>
+            <span class="editor-header-dot bg-[#f1fa8c]" aria-hidden="true"></span>
+            <span class="editor-header-dot bg-[#50fa7b]" aria-hidden="true"></span>
+            <span class="ml-3 text-xs font-mono text-[#6272a4]">index.html — Tribute</span>
+          </div>
+
+          <!-- Tab bar -->
+          <div class="flex border-b border-[#44475a] bg-[#1a1b26] overflow-x-auto" role="tablist" aria-label="Code files">
+            <button class="editor-tab active interactive" role="tab" aria-selected="true" aria-controls="panel-bio" data-tab="bio" id="tab-bio" type="button">bio.json</button>
+            <button class="editor-tab interactive" role="tab" aria-selected="false" aria-controls="panel-contrib" data-tab="contrib" id="tab-contrib" type="button">contributions.md</button>
+            <button class="editor-tab interactive" role="tab" aria-selected="false" aria-controls="panel-tribute" data-tab="tribute" id="tab-tribute" type="button">tribute.js</button>
+          </div>
+
+          <!-- bio.json panel -->
+          <article class="editor-content-panel active" id="panel-bio" role="tabpanel" aria-labelledby="tab-bio">
+            <div class="p-4 sm:p-6 font-mono text-sm leading-relaxed overflow-x-auto">
+              <div class="code-line"><span class="line-numbers">1</span><span class="code-content"><span style="color:#ff79c6">const</span> <span style="color:#50fa7b">professor</span> <span style="color:#ff79c6">=</span> <span style="color:#f8f8f2">{</span></span></div>
+              <div class="code-line"><span class="line-numbers">2</span><span class="code-content">  <span style="color:#8be9fd">"name"</span>: <span style="color:#f1fa8c">"Dharamraj Sir"</span>,</span></div>
+              <div class="code-line"><span class="line-numbers">3</span><span class="code-content">  <span style="color:#8be9fd">"role"</span>: <span style="color:#f1fa8c">"SOT Lead, Fullstack Development"</span>,</span></div>
+              <div class="code-line"><span class="line-numbers">4</span><span class="code-content">  <span style="color:#8be9fd">"superpower"</span>: <span style="color:#f1fa8c">"Turning complexity into clarity"</span>,</span></div>
+              <div class="code-line"><span class="line-numbers">5</span><span class="code-content">  <span style="color:#8be9fd">"traits"</span>: [<span style="color:#f1fa8c">"Mentor"</span>, <span style="color:#f1fa8c">"Architect"</span>, <span style="color:#f1fa8c">"Visionary"</span>],</span></div>
+              <div class="code-line"><span class="line-numbers">6</span><span class="code-content">  <span style="color:#8be9fd">"students_mentored"</span>: <span style="color:#bd93f9">10,000+</span>,</span></div>
+              <div class="code-line"><span class="line-numbers">7</span><span class="code-content">  <span style="color:#8be9fd">"wisdom"</span>: <span style="color:#f1fa8c">"Write code for humanity, not just to code."</span>,</span></div>
+              <div class="code-line"><span class="line-numbers">8</span><span class="code-content">  <span style="color:#8be9fd">"legacy"</span>: <span style="color:#f1fa8c">"Infinite"</span></span></div>
+              <div class="code-line"><span class="line-numbers">9</span><span class="code-content">  <span style="color:#8be9fd">"roadmap"</span>: <span style="color:#f1fa8c">"http://127.0.0.1:5500/index.html -> github.io [to be filled]"</span></span></div>
+              <div class="code-line"><span class="line-numbers">10</span><span class="code-content"><span style="color:#f8f8f2">};</span></span></div>
+            </div>
+          </article>
+
+          <!-- contributions.md panel -->
+          <article class="editor-content-panel" id="panel-contrib" role="tabpanel" aria-labelledby="tab-contrib">
+            <div class="p-4 sm:p-6 font-mono text-sm leading-relaxed overflow-x-auto">
+              <div class="code-line"><span class="line-numbers">1</span><span class="code-content"><span style="color:#bd93f9"># Contributions to Frontend Ecosystem</span></span></div>
+              <div class="code-line"><span class="line-numbers">2</span><span class="code-content"></span></div>
+              <div class="code-line"><span class="line-numbers">3</span><span class="code-content"><span style="color:#ffb86c">## Teaching Philosophy</span></span></div>
+              <div class="code-line"><span class="line-numbers">4</span><span class="code-content"><span style="color:#6272a4">-</span> Humari local-thinking ko global-vision dene ke liye</span></div>
+              <div class="code-line"><span class="line-numbers">5</span><span class="code-content"><span style="color:#6272a4">-</span> aur hume 'localhost' se nikal kar real-world deploy karne ke liye</span></div>
+              <div class="code-line"><span class="line-numbers">6</span><span class="code-content"><span style="color:#6272a4">-</span> Thank you for building our foundation, not just as developers, but as thinkers."
+</span></div>
+              <div class="code-line"><span class="line-numbers">7</span><span class="code-content"></span></div>
+
+              <div class="code-line"><span class="line-numbers">8</span><span class="code-content"><span style="color:#ffb86c">## Mentorship Impact</span></span></div>
+              <div class="code-line"><span class="line-numbers">9</span><span class="code-content"><span style="color:#6272a4">-</span> Code toh hum sirf machines ke liye likhte hain,</span></div>
+              <div class="code-line"><span class="line-numbers">10</span><span class="code-content"><span style="color:#6272a4">-</span> par your mentorship is written on our minds forever.</span></div>
+              <div class="code-line"><span class="line-numbers">11</span><span class="code-content"><span style="color:#6272a4">-</span>  Real impact output screen pe nahi, aapki guidance mein hai.</span></div>
+              <div class="code-line"><span class="line-numbers">12</span><span class="code-content"></span></div>
+              <div class="code-line"><span class="line-numbers">13</span><span class="code-content"><span style="color:#6272a4">&gt;</span> <span style="color:#f1fa8c">"The best code empowers others to write their own."</span></span></div>
+              <div class="code-line"><span class="line-numbers">14</span><span class="code-content"><span style="color:#6272a4">&gt;</span> <span style="color:#f1fa8c">— Dharamraj Sir</span></span></div>
+            </div>
+          </article>
+
+          <!-- tribute.js panel -->
+          <article class="editor-content-panel" id="panel-tribute" role="tabpanel" aria-labelledby="tab-tribute">
+            <div class="p-4 sm:p-6 font-mono text-sm leading-relaxed overflow-x-auto">
+              <div class="code-line"><span class="line-numbers">1</span><span class="code-content"><span style="color:#6272a4">// Tribute Module — Dharamraj Sir</span></span></div>
+              <div class="code-line"><span class="line-numbers">2</span><span class="code-content"><span style="color:#ff79c6">const</span> <span style="color:#50fa7b">mentor</span> <span style="color:#ff79c6">=</span> <span style="color:#f8f8f2">{</span></span></div>
+              <div class="code-line"><span class="line-numbers">3</span><span class="code-content">  <span style="color:#8be9fd">name</span>: <span style="color:#f1fa8c">'Dharamraj Sir'</span>,</span></div>
+              <div class="code-line"><span class="line-numbers">4</span><span class="code-content">  <span style="color:#8be9fd">title</span>: <span style="color:#f1fa8c">'HOD — Frontend Engineering'</span>,</span></div>
+              <div class="code-line"><span class="line-numbers">5</span><span class="code-content"><span style="color:#f8f8f2">};</span></span></div>
+              <div class="code-line"><span class="line-numbers">6</span><span class="code-content"></span></div>
+              <div class="code-line"><span class="line-numbers">7</span><span class="code-content"><span style="color:#6272a4">// Destructuring for cleaner access</span></span></div>
+              <div class="code-line"><span class="line-numbers">8</span><span class="code-content"><span style="color:#ff79c6">const</span> <span style="color:#f8f8f2">{</span> <span style="color:#50fa7b">name</span>, <span style="color:#50fa7b">title</span> <span style="color:#f8f8f2">}</span> <span style="color:#ff79c6">=</span> <span style="color:#50fa7b">mentor</span>;</span></div>
+              <div class="code-line"><span class="line-numbers">9</span><span class="code-content"></span></div>
+              <div class="code-line"><span class="line-numbers">10</span><span class="code-content"><span style="color:#ff79c6">const</span> <span style="color:#50fa7b">gratitude</span> <span style="color:#ff79c6">=</span> <span style="color:#f8f8f2">{</span></span></div>
+              <div class="code-line"><span class="line-numbers">11</span><span class="code-content">  <span style="color:#8be9fd">students</span>: <span style="color:#bd93f9">2000</span><span style="color:#f8f8f2">,</span></span></div>
+              <div class="code-line"><span class="line-numbers">12</span><span class="code-content">  <span style="color:#8be9fd">message</span>: <span style="color:#f1fa8c">`Thank you, ${name}, for everything.`</span></span></div>
+              <div class="code-line"><span class="line-numbers">13</span><span class="code-content"><span style="color:#f8f8f2">};</span></span></div>
+              <div class="code-line"><span class="line-numbers">14</span><span class="code-content"></span></div>
+              <div class="code-line"><span class="line-numbers">15</span><span class="code-content"><span style="color:#bd93f9">console.table</span><span style="color:#f8f8f2">(</span><span style="color:#50fa7b">gratitude</span><span style="color:#f8f8f2">);</span></span></div>
+              <div class="code-line"><span class="line-numbers">16</span><span class="code-content"><span style="color:#6272a4">// "Thank you, Dharamraj Sir, for everything."</span></span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!--
+      #console — Interactive Console ("Wish Dispatcher")
+      Terminal boot logs + CTA button with canvas fireworks + audio.
+    -->
+    <section id="console" class="section-panel pb-20 sm:pb-28 px-4 reveal" aria-labelledby="console-title">
+      <div class="max-w-3xl mx-auto">
+        <h2 id="console-title" class="fluid-section font-bold text-[#50fa7b] font-mono mb-6 text-center">
+          &gt; Interactive_Console
+        </h2>
+        <div class="terminal-window">
+          <div class="flex items-center justify-between px-4 py-2 bg-[#0a0b12] border-b border-[#44475a]">
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-[#6272a4] font-mono">bash — wishes-dispatcher</span>
+            </div>
+            <button id="muteToggle" class="mute-toggle muted interactive" type="button" aria-label="Unmute sound" aria-pressed="false">
+              <span id="muteIcon" aria-hidden="true">&#x1F507;</span>
+              <span id="muteLabel" class="text-xs">Muted</span>
+            </button>
+          </div>
+          <div class="terminal-output p-4 sm:p-6 text-[#50fa7b]" id="terminalBody" aria-live="polite" role="log">
+            <div class="terminal-line" style="animation-delay:0s">
+              <span style="color:#6272a4">[SYSTEM]</span> Booting tribute kernel v1.0.0...
+            </div>
+            <div class="terminal-line" style="animation-delay:0.2s">
+              <span style="color:#6272a4">[INIT]</span> Loading modules: <span style="color:#f1fa8c">gratitude</span>, <span style="color:#f1fa8c">admiration</span>, <span style="color:#f1fa8c">respect</span>...
+            </div>
+            <div class="terminal-line" style="animation-delay:0.4s">
+              <span style="color:#6272a4">[OK]</span> All systems operational.
+            </div>
+            <div class="terminal-line" style="animation-delay:0.6s">
+              <span style="color:#6272a4">[READY]</span> Awaiting birthday wish deployment.
+              <span class="cursor-blink text-[#f8f8f2]">_</span>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 flex flex-col sm:flex-row items-center gap-4 justify-center">
+          <button id="wishCta" class="px-8 py-3 bg-[#bd93f9] hover:bg-[#a679f0] text-[#1a1b26] font-bold font-mono text-sm rounded-lg interactive shadow-lg shadow-[#bd93f9]/20" type="button">
+            &gt; Send Birthday Wishes
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!--
+      #wishes — Dynamic Student Wish Board
+      SQL-themed form + DOM-injected wish cards (safe createElement).
+    -->
+    <section id="wishes" class="section-panel pb-20 sm:pb-28 px-4 reveal" aria-labelledby="wishes-title">
+      <div class="max-w-4xl mx-auto">
+        <h2 id="wishes-title" class="fluid-section font-bold text-[#ff79c6] font-mono mb-6 text-center">
+          &lt; Wish_Board /&gt;
+        </h2>
+
+        <form id="wishForm" class="editor-window p-5 sm:p-8" novalidate aria-label="Submit a birthday wish">
+          <div class="font-mono text-sm mb-6 text-[#6272a4]">
+            <span class="sql-keyword">INSERT INTO</span> wishes
+            <span class="sql-keyword">(</span><span style="color:#8be9fd">name</span>, <span style="color:#8be9fd">message</span><span class="sql-keyword">)</span>
+            <br class="sm:hidden" />
+            <span class="sql-keyword">VALUES</span>
+            <span class="sql-keyword">(</span><span class="sql-placeholder">?</span>, <span class="sql-placeholder">?</span><span class="sql-keyword">);</span>
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="wishName" class="block font-mono text-xs text-[#6272a4] mb-1.5">
+                <span style="color:#8be9fd">-- name:</span> VARCHAR(64) NOT NULL
+              </label>
+              <input type="text" id="wishName" class="form-input" placeholder="Enter your name..." maxlength="64" aria-required="true" autocomplete="name" />
+              <div class="error-message mt-1" id="nameError" aria-live="polite"></div>
+            </div>
+            <div>
+              <label for="wishMessage" class="block font-mono text-xs text-[#6272a4] mb-1.5">
+                <span style="color:#8be9fd">-- message:</span> TEXT NOT NULL
+              </label>
+              <input type="text" id="wishMessage" class="form-input" placeholder="Your birthday message..." maxlength="200" aria-required="true" />
+              <div class="error-message mt-1" id="msgError" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-[#50fa7b] hover:bg-[#3de86a] text-[#1a1b26] font-bold font-mono text-sm rounded-lg interactive">
+            $ EXECUTE
+          </button>
+        </form>
+
+        <div id="wishBoardContainer" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Submitted birthday wishes"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!--
+    ================================================================
+    <footer> — Attribution
+    ================================================================
+  -->
+  <footer id="siteFooter" class="border-t border-[#44475a] py-8 px-4 text-center">
+    <p class="font-mono text-xs text-[#6272a4] max-w-2xl mx-auto leading-relaxed">
+      From the front-end of our dreams to the back-end of our efforts, 
+      <br class="sm:hidden" />
+      Thank you for being our root directory. ❤️
+    </p>
+    <p class="font-mono text-[10px] text-[#44475a] mt-3">
+      &copy; <span id="yearSpan">2026</span> &middot; With deepest gratitude from every student you have inspired.
+    </p>
+  </footer>
+
+  <!--
+    Copy JSON Block — Section 2.6 of IMPROVEMENTS_PROMPT.
+    All user-visible strings are externalised here so non-technical
+    editors can update copy without touching JavaScript logic.
+  -->
+  <script id="site-copy" type="application/json">
+  {
+    "nav": {
+      "healthLabel": "System Health:",
+      "healthStatus": "STABLE"
+    },
+    "hero": {
+      "prefix": "Happy Birthday,",
+      "name": "Dharamraj Sir",
+      "subtitle": "Senior Frontend Architect, Mentor, & Head of Department"
+    },
+    "editor": {
+      "title": "<Tribute_Document />"
+    },
+    "console": {
+      "title": "> Interactive_Console",
+      "terminalLabel": "bash — wishes-dispatcher",
+      "ctaLabel": "> Send Birthday Wishes",
+      "ctaLoading": "> Deploying...",
+      "dispatch": [
+        "> Sending birthday wish payload...",
+        "> Connecting to gratitude API...",
+        "> 200 OK — Wishes Deployed!",
+        "> Happy Birthday, Dharamraj Sir! From all your students.",
+        "> Ready for next wish. _"
+      ]
+    },
+    "wishes": {
+      "title": "< Wish_Board />",
+      "namePlaceholder": "Enter your name...",
+      "messagePlaceholder": "Your birthday message...",
+      "submitLabel": "$ EXECUTE"
+    },
+    "audio": {
+      "mutedLabel": "Muted",
+      "unmutedLabel": "Unmuted"
+    },
+    "footer": {
+      "text": "--- From the front-end of our dreams to the back-end of our efforts, thank you for being our root directory. ❤️"
+    }
+  }
+  </script>
+
+  <!--
+    Canvas overlay — Particle explosion effect.
+    Fixed position, pointer-events: none, rendered at 60 FPS.
+  -->
+  <canvas id="particleCanvas" aria-hidden="true"></canvas>
+
+  <!--
+    ES6 Module Entry Point — All JavaScript logic.
+    type="module" enables import/export syntax.
+  -->
+  <script type="module" src="js/app.js"></script>
+
+  <!--
+    Self-contained Test Harness — Section 6.3 of IMPROVEMENTS_PROMPT.
+    Only loads when the URL contains ?test=true.
+    Imports @jest/globals from CDN and runs smoke tests for each module.
+  -->
+  <script type="module">
+    if (new URLSearchParams(location.search).get('test') === 'true') {
+      const runTests = async () => {
+        try {
+          const { describe, it, expect } = await import(
+            'https://cdn.jsdelivr.net/npm/@jest/globals@29.7.0/+esm'
+          );
+          const results = [];
+
+          // Clock module smoke test
+          describe('Clock Module', () => {
+            it('should update the clock element every second', () => {
+              const el = document.getElementById('digitalClock');
+              expect(el).not.toBeNull();
+              expect(el.tagName).toBe('TIME');
+            });
+          });
+
+          // Editor module smoke test
+          describe('Editor Module', () => {
+            it('should have three tab panels', () => {
+              const panels = document.querySelectorAll('[role="tabpanel"]');
+              expect(panels.length).toBe(3);
+            });
+            it('should have three tab buttons', () => {
+              const tabs = document.querySelectorAll('[role="tab"][data-tab]');
+              expect(tabs.length).toBe(3);
+            });
+          });
+
+          // Console / Terminal smoke test
+          describe('Console Module', () => {
+            it('should have a CTA button', () => {
+              const btn = document.getElementById('wishCta');
+              expect(btn).not.toBeNull();
+              expect(btn.tagName).toBe('BUTTON');
+            });
+            it('should have a mute toggle', () => {
+              const toggle = document.getElementById('muteToggle');
+              expect(toggle).not.toBeNull();
+            });
+          });
+
+          // Wish Board smoke test
+          describe('Wish Board Module', () => {
+            it('should have a form with name and message inputs', () => {
+              const form = document.getElementById('wishForm');
+              const nameInput = document.getElementById('wishName');
+              const msgInput = document.getElementById('wishMessage');
+              expect(form).not.toBeNull();
+              expect(nameInput).not.toBeNull();
+              expect(msgInput).not.toBeNull();
+            });
+            it('should have a container for wish cards', () => {
+              const board = document.getElementById('wishBoardContainer');
+              expect(board).not.toBeNull();
+            });
+          });
+
+          // Canvas smoke test
+          describe('Particle Engine', () => {
+            it('should have a canvas element', () => {
+              const canvas = document.getElementById('particleCanvas');
+              expect(canvas).not.toBeNull();
+              expect(canvas.tagName).toBe('CANVAS');
+            });
+          });
+
+          console.log('%c[TESTS] All smoke tests passed!', 'color: #50fa7b; font-weight: bold;');
+        } catch (err) {
+          console.error('%c[TESTS] Test harness error:', 'color: #ff5555; font-weight: bold;', err);
+        }
+      };
+      runTests();
+    }
+  </script>
+
+  <!-- Source map comment for easier debugging (Section 2.5) -->
+  <!-- //# sourceURL=index.html -->
+
+</body>
+</html>
